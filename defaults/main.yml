@@ -1,3 +1,16 @@
 #SPDX-License-Identifier: MIT-0
 ---
-# defaults file for role
+# defaults file for plex role
+
+# APT repository settings (Debian/Ubuntu)
+plex_repo_uri: "https://repo.plex.tv/deb/"
+plex_repo_suite: public
+plex_repo_key_url: "https://downloads.plex.tv/plex-keys/PlexSign.v2.key"
+
+# Package to install
+plex_package: plexmediaserver
+
+# Service management
+plex_service_name: plexmediaserver
+plex_service_state: started
+plex_service_enabled: true

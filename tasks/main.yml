@@ -3,6 +3,66 @@
 - name: Run setup tasks
   ansible.builtin.include_tasks: setup-{{ ansible_facts.os_family }}.yml
 
-- name: Task is running from within the role
-  ansible.builtin.debug:
-    msg: "This is a task from my_role."
+- name: Update cache if Plex repository changed
+  ansible.builtin.apt:
+    update_cache: true
+  when: plex_repo is defined and plex_repo.changed
+
+- name: Install Plex Media Server
+  ansible.builtin.package:
+    name: "{{ plex_package }}"
+    state: present
+
+# The Plex postinst skips user, directory, and systemd unit setup when it
+# detects a Docker container. Complete those steps in that case only; on
+# bare metal, VMs, and LXC the postinst performs them itself.
+- name: Check for Plex Media Server systemd unit
+  ansible.builtin.stat:
+    path: "/lib/systemd/system/{{ plex_service_name }}.service"
+  register: plex_service_unit
+
+- name: Complete installation steps skipped by Plex postinst in Docker
+  when:
+    - not plex_service_unit.stat.exists
+    - ansible_virtualization_type == 'docker'
+  block:
+    - name: Ensure plex group exists
+      ansible.builtin.group:
+        name: plex
+        system: true
+        state: present
+
+    - name: Ensure plex user exists
+      ansible.builtin.user:
+        name: plex
+        group: plex
+        system: true
+        home: /var/lib/plexmediaserver
+        shell: /usr/sbin/nologin
+        create_home: false
+        state: present
+
+    - name: Create Plex data directory
+      ansible.builtin.file:
+        path: "/var/lib/plexmediaserver/Library/Application Support/Plex Media Server"
+        state: directory
+        owner: plex
+        group: plex
+        mode: "0755"
+
+    - name: Install Plex Media Server systemd unit
+      ansible.builtin.copy:
+        src: /usr/lib/plexmediaserver/lib/plexmediaserver.service
+        dest: "/lib/systemd/system/{{ plex_service_name }}.service"
+        remote_src: true
+        mode: "0644"
+
+    - name: Reload systemd daemon
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+
+- name: Ensure Plex Media Server is running and enabled
+  ansible.builtin.service:
+    name: "{{ plex_service_name }}"
+    state: "{{ plex_service_state }}"
+    enabled: "{{ plex_service_enabled }}"

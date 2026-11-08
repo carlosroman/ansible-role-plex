@@ -7,12 +7,22 @@
     - name: Update apt cache.
       apt: update_cache=true cache_valid_time=600
       changed_when: false
-      when: ansible_os_family == 'Debian'
+      when: ansible_facts['os_family'] == 'Debian'
 
   roles:
     - role: carlosroman.plex
 
   post_tasks:
-    - name: Verify
-      ansible.builtin.debug:
-        msg: "Add your verification tasks here."
+    - name: Verify plexmediaserver package is installed.
+      ansible.builtin.command: dpkg-query -W plexmediaserver
+      register: plex_package_check
+      changed_when: false
+      failed_when: plex_package_check.rc != 0
+      when: ansible_facts['os_family'] == 'Debian'
+
+    - name: Verify plexmediaserver service is running.
+      ansible.builtin.command: systemctl is-active plexmediaserver
+      register: plex_service_check
+      changed_when: false
+      failed_when: plex_service_check.stdout != 'active'
+      when: ansible_facts['os_family'] == 'Debian'

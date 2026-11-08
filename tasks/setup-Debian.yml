@@ -1,6 +1,22 @@
 #SPDX-License-Identifier: MIT-0
 ---
 
-- name: Task is only run when Debian OS
-  ansible.builtin.debug:
-    msg: "This is a task for Debian OS from my_role."
+- name: Install python3-debian (required by deb822_repository)
+  ansible.builtin.apt:
+    name: python3-debian
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Add Plex Media Server repository
+  ansible.builtin.deb822_repository:
+    name: plex
+    uris: "{{ plex_repo_uri }}"
+    types: deb
+    enabled: true
+    suites: "{{ plex_repo_suite }}"
+    components:
+      - main
+    signed_by: "{{ plex_repo_key_url }}"
+    state: present
+  register: plex_repo
