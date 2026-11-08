@@ -66,6 +66,55 @@
       ansible.builtin.systemd_service:
         daemon_reload: true
 
+- name: Determine whether Plex service overrides are configured
+  ansible.builtin.set_fact:
+    plex_overrides_configured: >-
+      {{ plex_data_dir | default('', true) | length > 0
+         or plex_temp_dir | default('', true) | length > 0
+         or plex_run_user | default('', true) | length > 0
+         or plex_run_group | default('', true) | length > 0
+         or (plex_service_overrides | length > 0) }}
+
+- name: Create custom Plex data directory
+  ansible.builtin.file:
+    path: "{{ plex_data_dir }}"
+    state: directory
+    owner: "{{ plex_run_user | default('plex', true) }}"
+    group: "{{ plex_run_group | default('plex', true) }}"
+    mode: "0755"
+  when: plex_data_dir | default('', true) | length > 0
+
+- name: Create custom Plex temp directory
+  ansible.builtin.file:
+    path: "{{ plex_temp_dir }}"
+    state: directory
+    owner: "{{ plex_run_user | default('plex', true) }}"
+    group: "{{ plex_run_group | default('plex', true) }}"
+    mode: "0755"
+  when: plex_temp_dir | default('', true) | length > 0
+
+- name: Create Plex Media Server service drop-in directory
+  ansible.builtin.file:
+    path: "/etc/systemd/system/{{ plex_service_name }}.service.d"
+    state: directory
+    mode: "0755"
+  when: plex_overrides_configured | bool
+
+- name: Configure Plex Media Server service overrides
+  ansible.builtin.copy:
+    dest: "/etc/systemd/system/{{ plex_service_name }}.service.d/override.conf"
+    content: "{{ lookup('ansible.builtin.template', 'plex-service-override.conf.j2') }}"
+    mode: "0644"
+  when: plex_overrides_configured | bool
+  notify: Restart Plex Media Server
+
+- name: Remove Plex Media Server service override drop-in
+  ansible.builtin.file:
+    path: "/etc/systemd/system/{{ plex_service_name }}.service.d/override.conf"
+    state: absent
+  when: not (plex_overrides_configured | bool)
+  notify: Restart Plex Media Server
+
 - name: Ensure Plex Media Server is running and enabled
   ansible.builtin.service:
     name: "{{ plex_service_name }}"

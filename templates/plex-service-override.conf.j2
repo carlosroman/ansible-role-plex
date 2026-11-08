@@ -1,0 +1,17 @@
+# Ansible managed - do not edit on the host.
+[Service]
+{% if plex_data_dir %}
+Environment="PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR={{ plex_data_dir }}"
+{% endif %}
+{% if plex_temp_dir %}
+Environment="TMPDIR={{ plex_temp_dir }}"
+{% endif %}
+{% if plex_run_user %}
+User={{ plex_run_user }}
+{% endif %}
+{% if plex_run_group %}
+Group={{ plex_run_group }}
+{% endif %}
+{% for directive, value in plex_service_overrides.items() %}
+{{ directive }}={{ value }}
+{% endfor %}

@@ -1,0 +1,62 @@
+#SPDX-License-Identifier: MIT-0
+---
+# Converge playbook variant that exercises the service override options.
+# Run with: make test/overrides
+- name: Converge (service overrides)
+  hosts: all
+
+  pre_tasks:
+    - name: Update apt cache.
+      apt: update_cache=true cache_valid_time=600
+      changed_when: false
+      when: ansible_facts['os_family'] == 'Debian'
+
+  roles:
+    - role: carlosroman.plex
+      vars:
+        plex_data_dir: /srv/plex-library
+        plex_temp_dir: /srv/plex-transcode
+        plex_service_overrides:
+          LimitNOFILE: 65536
+
+  post_tasks:
+    - name: Verify override drop-in is present.
+      ansible.builtin.stat:
+        path: /etc/systemd/system/plexmediaserver.service.d/override.conf
+      register: plex_override_stat
+      failed_when: not plex_override_stat.stat.exists
+
+    - name: Read override drop-in.
+      ansible.builtin.slurp:
+        src: /etc/systemd/system/plexmediaserver.service.d/override.conf
+      register: plex_override_file
+
+    - name: Verify override contents.
+      ansible.builtin.assert:
+        that:
+          - "'PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR=/srv/plex-library' in
+             plex_override_file.content | b64decode"
+          - "'TMPDIR=/srv/plex-transcode' in plex_override_file.content | b64decode"
+          - "'LimitNOFILE=65536' in plex_override_file.content | b64decode"
+
+    - name: Verify custom data directory exists and is owned by plex.
+      ansible.builtin.stat:
+        path: /srv/plex-library
+      register: plex_custom_dir
+      failed_when: not (plex_custom_dir.stat.exists and plex_custom_dir.stat.pw_name == 'plex')
+
+    - name: Verify overrides are loaded into the unit.
+      ansible.builtin.command: systemctl show plexmediaserver -p Environment -p LimitNOFILE
+      register: plex_unit_props
+      changed_when: false
+      failed_when:
+        - "'/srv/plex-library' not in plex_unit_props.stdout"
+        - "'LimitNOFILE=65536' not in plex_unit_props.stdout"
+
+    - name: Verify plexmediaserver service is running.
+      ansible.builtin.command: systemctl is-active plexmediaserver
+      register: plex_service_check
+      changed_when: false
+      until: plex_service_check.stdout == 'active'
+      retries: 12
+      delay: 5

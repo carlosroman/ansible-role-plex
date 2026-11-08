@@ -50,6 +50,10 @@ test/amazonlinux-2023 :
 test/fedora-44 :
 	@(MOLECULE_DISTRO=fedora44 ${MOLECULE_TEST})
 
+.PHONY : test/overrides
+test/overrides :
+	@(MOLECULE_PLAYBOOK=converge-overrides.yml ${MOLECULE_TEST})
+
 .PHONY : test/all
 test/all : test/ubuntu-2604
 test/all : test/ubuntu-2404

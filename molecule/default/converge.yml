@@ -31,5 +31,7 @@
       ansible.builtin.command: systemctl is-active plexmediaserver
       register: plex_service_check
       changed_when: false
-      failed_when: plex_service_check.stdout != 'active'
+      until: plex_service_check.stdout == 'active'
+      retries: 12
+      delay: 5
       when: ansible_facts['os_family'] in ['Debian', 'RedHat']

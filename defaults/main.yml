@@ -17,3 +17,16 @@ plex_package: plexmediaserver
 plex_service_name: plexmediaserver
 plex_service_state: started
 plex_service_enabled: true
+
+# Service configuration via systemd drop-in override.conf.
+# Set to null to leave the directive at the Plex default.
+plex_data_dir: null # PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR
+plex_temp_dir: null # TMPDIR (transcoding temp)
+plex_run_user: null # Run the service as this user (must exist)
+plex_run_group: null # Run the service as this group (must exist)
+
+# Escape hatch: any additional [Service] directives. Example:
+# plex_service_overrides:
+#   LimitNOFILE: 65536
+#   NoNewPrivileges: "true"
+plex_service_overrides: {}
