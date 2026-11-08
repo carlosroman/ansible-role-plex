@@ -1,11 +1,38 @@
-Base Role
-=========
+Plex
+====
 
-Just a base Ansible role that makes it quickly to get started. It sets-up:
+An Ansible role for installing Plex.
 
-* Ansible role metadata and default files for an Ansible role
-* Molecule tests
-* Devcontainer environment for building the role
-* Makefile with useful shortcuts
-* CI using GitHub Actions
+Requirements
+------------
 
+This role requires Ansible 2.21 or higher.
+
+Role Variables
+--------------
+
+None yet.
+
+Dependencies
+------------
+
+None.
+
+Example Playbook
+----------------
+
+```yaml
+- hosts: all
+  roles:
+    - role: carlosroman.plex
+```
+
+License
+-------
+
+MIT
+
+Author Information
+------------------
+
+[Carlos Roman](https://github.com/carlosroman)
