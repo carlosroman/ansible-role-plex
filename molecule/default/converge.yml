@@ -10,7 +10,7 @@
       when: ansible_os_family == 'Debian'
 
   roles:
-    - role: carlosroman.base_role
+    - role: carlosroman.plex
 
   post_tasks:
     - name: Verify

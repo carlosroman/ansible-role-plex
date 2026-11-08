@@ -1,5 +1,5 @@
 [project]
-name = "ansible-base-role"
+name = "ansible-role-plex"
 license = "MIT"
 license-files = ["LICENSE"]
 readme = "README.md"
