@@ -7,6 +7,9 @@ plex_repo_uri: "https://repo.plex.tv/deb/"
 plex_repo_suite: public
 plex_repo_key_url: "https://downloads.plex.tv/plex-keys/PlexSign.v2.key"
 
+# YUM/DNF repository settings (RedHat/Fedora/CentOS)
+plex_rpm_repo_uri: "https://repo.plex.tv/rpm/"
+
 # Package to install
 plex_package: plexmediaserver
 

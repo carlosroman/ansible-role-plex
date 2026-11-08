@@ -13,16 +13,23 @@
     - role: carlosroman.plex
 
   post_tasks:
-    - name: Verify plexmediaserver package is installed.
+    - name: Verify plexmediaserver package is installed (dpkg).
       ansible.builtin.command: dpkg-query -W plexmediaserver
       register: plex_package_check
       changed_when: false
       failed_when: plex_package_check.rc != 0
       when: ansible_facts['os_family'] == 'Debian'
 
+    - name: Verify plexmediaserver package is installed (rpm).
+      ansible.builtin.command: rpm -q plexmediaserver
+      register: plex_package_check
+      changed_when: false
+      failed_when: plex_package_check.rc != 0
+      when: ansible_facts['os_family'] == 'RedHat'
+
     - name: Verify plexmediaserver service is running.
       ansible.builtin.command: systemctl is-active plexmediaserver
       register: plex_service_check
       changed_when: false
       failed_when: plex_service_check.stdout != 'active'
-      when: ansible_facts['os_family'] == 'Debian'
+      when: ansible_facts['os_family'] in ['Debian', 'RedHat']

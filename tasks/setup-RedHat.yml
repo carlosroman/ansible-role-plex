@@ -1,6 +1,15 @@
 #SPDX-License-Identifier: MIT-0
 ---
 
-- name: Task is only run when RedHat OS
-  ansible.builtin.debug:
-    msg: "This is a task for RedHat OS from my_role."
+- name: Add Plex Media Server repository
+  ansible.builtin.yum_repository:
+    name: PlexTv
+    description: Plex.tv
+    baseurl: "{{ plex_rpm_repo_uri }}"
+    enabled: true
+    gpgcheck: true
+    repo_gpgcheck: true
+    gpgkey: "{{ plex_repo_key_url }}"
+    state: present
+    file: PlexTv
+  register: plex_rpm_repo
